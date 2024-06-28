@@ -16,11 +16,20 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-13 ]
         python: [ '3.9', '3.10', '3.11', '3.12' ]
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: select Xcode version
+      # MacOS > 14.2 requires Xcode >= 15.3; otherwise loading native extension modules fails with e.g.:
+      # dlopen(/opt/homebrew/lib/python3.11/site-packages/slipcover/probe.abi3.so, 0x0002): bad bind opcode 0x00 
+      if: startsWith(matrix.os, 'macos-')
+      run: |
+        if [ -d /Applications/Xcode_15.3.app/Contents/Developer ]; then sudo xcode-select --switch /Applications/Xcode_15.3.app/Contents/Developer; fi
+        clang++ --version
+        g++ --version
 
     - uses: actions/setup-python@v5
       with:
